@@ -52,90 +52,12 @@ const getCourtWidthAtY = y => {
 
 const TennisProSet = () => {
   const canvasRef = useRef(null);
-  const ballRef = useRef({
-    x: COURT.CANVAS_WIDTH / 2,
-    y: COURT.NET_Y,
-    z: 100,
-    vx: 3,
-    vy: 3,
-    vz: 0,
-    radius: 8,
-    rotationY: 0
-  });
-  const [ballState, setBallState] = useState(ballRef.current);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
-
-    const updateBall = () => {
-      const prev = ballRef.current;
-      let { x, y, z, vx, vy, vz, rotationY } = prev;
-
-      // 중력
-      vz -= PHYSICS.GRAVITY * COURT.SCALE * PHYSICS.DT;
-
-      // 위치 업데이트 (높이에 따른 원근 보정)
-      x += vx * (1 + z / 200);
-      y += vy;
-      z += vz;
-
-      // 바닥 충돌
-      if (z <= 0) {
-        z = 0;
-        vz *= -PHYSICS.COR_GROUND;
-        vy *= 0.8;
-      }
-
-      // 네트 충돌
-      if (y > COURT.NET_Y - 20 && y < COURT.NET_Y + 20 && z < COURT.NET_HEIGHT) {
-        vx *= -0.7;
-        vy *= -0.3;
-      }
-
-      // y 경계 (코트 앞뒤)
-      if (y < COURT.OPPONENT_TOP_Y) {
-        y = COURT.OPPONENT_TOP_Y;
-        vy = Math.abs(vy);
-      }
-      if (y > COURT.PLAYER_BOTTOM_Y) {
-        y = COURT.PLAYER_BOTTOM_Y;
-        vy = -Math.abs(vy);
-      }
-
-      // x 경계 (사다리꼴 너비)
-      const courtWidth = getCourtWidthAtY(y);
-      const half = courtWidth / 2;
-      const centerX = COURT.CANVAS_WIDTH / 2;
-      const minX = centerX - half + prev.radius;
-      const maxX = centerX + half - prev.radius;
-      if (x < minX) {
-        x = minX;
-        vx = Math.abs(vx) * PHYSICS.COR_RACKET;
-      } else if (x > maxX) {
-        x = maxX;
-        vx = -Math.abs(vx) * PHYSICS.COR_RACKET;
-      }
-
-      // 공기저항
-      vx *= PHYSICS.AIR_RESISTANCE;
-      vy *= PHYSICS.AIR_RESISTANCE;
-
-      const next = {
-        ...prev,
-        x,
-        y,
-        z,
-        vx,
-        vy,
-        vz,
-        rotationY: (rotationY + vy * 10) % 360
-      };
-      ballRef.current = next;
-      setBallState(next);
-    };
 
     const drawCourt = () => {
       ctx.clearRect(0, 0, COURT.CANVAS_WIDTH, COURT.CANVAS_HEIGHT);
@@ -214,58 +136,9 @@ const TennisProSet = () => {
       ctx.setLineDash([]);
     };
 
-    const drawBall = () => {
-      const { x, y, z, radius } = ballRef.current;
-      const centerX = COURT.CANVAS_WIDTH / 2;
-      const screenX = x;
-      const screenY = y - z * 0.6;
-      const scaledR = radius * (1 + z / 200);
-
-      // 그림자
-      const shadowWidth = scaledR * 1.8;
-      const shadowHeight = scaledR * 0.6;
-      const shadowY = y + scaledR * 0.6;
-      const shadowX = screenX;
-      const shadowAlpha = Math.max(0.1, 0.6 - z / 200);
-      ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(shadowX, shadowY, shadowWidth, shadowHeight, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 공
-      const grad = ctx.createRadialGradient(
-        screenX - scaledR * 0.4,
-        screenY - scaledR * 0.4,
-        scaledR * 0.2,
-        screenX,
-        screenY,
-        scaledR
-      );
-      grad.addColorStop(0, '#f6ff7a');
-      grad.addColorStop(0.6, '#d4ef3f');
-      grad.addColorStop(1, '#9bbc1b');
-
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, scaledR, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 심선
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth = scaledR * 0.25;
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, scaledR * 0.75, 0.5, Math.PI + 0.5);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, scaledR * 0.75, Math.PI + 0.5, Math.PI * 2 + 0.5);
-      ctx.stroke();
-    };
-
     let frameId;
     const loop = () => {
-      updateBall();
       drawCourt();
-      drawBall();
       frameId = requestAnimationFrame(loop);
     };
     frameId = requestAnimationFrame(loop);
@@ -288,7 +161,7 @@ const TennisProSet = () => {
       <div style={{ maxWidth: COURT.CANVAS_WIDTH, width: '100%' }}>
         <h2 style={{ margin: '0 0 8px' }}>사다리꼴 테니스 코트 (원근)</h2>
         <p style={{ margin: '0 0 12px', color: '#c7e3c9', fontSize: '14px' }}>
-          ITF 규격 기반 원근 코트 · 중력/반발/공기저항 물리 · 네트/서비스 라인 표시
+          ITF 규격 기반 원근 코트 · 네트/서비스 라인 표시
         </p>
       </div>
 
@@ -304,11 +177,6 @@ const TennisProSet = () => {
           borderRadius: '8px'
         }}
       />
-
-      <div style={{ marginTop: '12px', fontSize: '14px', color: '#d7ffd9' }}>
-        x: {ballState.x.toFixed(1)} · y: {ballState.y.toFixed(1)} · z:{' '}
-        {ballState.z.toFixed(1)}
-      </div>
     </div>
   );
 };
