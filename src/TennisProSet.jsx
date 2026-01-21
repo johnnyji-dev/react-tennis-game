@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 // ITF 실제 규격 (미터) — 참고용
 const COURT_REAL = {
@@ -52,6 +52,7 @@ const getCourtWidthAtY = y => {
 
 const TennisProSet = () => {
   const canvasRef = useRef(null);
+  const courtType = 'doubles'; // 항상 doubles 코트만 표시
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,47 +66,109 @@ const TennisProSet = () => {
       ctx.fillRect(0, 0, COURT.CANVAS_WIDTH, COURT.CANVAS_HEIGHT);
 
       const centerX = COURT.CANVAS_WIDTH / 2;
+
+      // Singles vs Doubles 비율 계산 (ITF 규격 기반)
+      const widthRatio =
+        courtType === 'singles'
+          ? COURT_REAL.WIDTH_SINGLES / COURT_REAL.WIDTH_DOUBLES
+          : 1.0;
+
       const oppTopLeft = {
-        x: centerX - COURT.OPPONENT_WIDTH_TOP / 2,
+        x: centerX - (COURT.OPPONENT_WIDTH_TOP / 2) * widthRatio,
         y: COURT.OPPONENT_TOP_Y
       };
-      const oppTopRight = { x: centerX + COURT.OPPONENT_WIDTH_TOP / 2, y: COURT.OPPONENT_TOP_Y };
+      const oppTopRight = {
+        x: centerX + (COURT.OPPONENT_WIDTH_TOP / 2) * widthRatio,
+        y: COURT.OPPONENT_TOP_Y
+      };
       const oppBottomLeft = {
-        x: centerX - COURT.OPPONENT_WIDTH_BOTTOM / 2,
+        x: centerX - (COURT.OPPONENT_WIDTH_BOTTOM / 2) * widthRatio,
         y: COURT.OPPONENT_BOTTOM_Y
       };
       const oppBottomRight = {
-        x: centerX + COURT.OPPONENT_WIDTH_BOTTOM / 2,
+        x: centerX + (COURT.OPPONENT_WIDTH_BOTTOM / 2) * widthRatio,
         y: COURT.OPPONENT_BOTTOM_Y
       };
 
       const plyTopLeft = {
-        x: centerX - COURT.PLAYER_WIDTH_TOP / 2,
+        x: centerX - (COURT.PLAYER_WIDTH_TOP / 2) * widthRatio,
         y: COURT.PLAYER_TOP_Y
       };
-      const plyTopRight = { x: centerX + COURT.PLAYER_WIDTH_TOP / 2, y: COURT.PLAYER_TOP_Y };
+      const plyTopRight = {
+        x: centerX + (COURT.PLAYER_WIDTH_TOP / 2) * widthRatio,
+        y: COURT.PLAYER_TOP_Y
+      };
       const plyBottomLeft = {
-        x: centerX - COURT.PLAYER_WIDTH_BOTTOM / 2,
+        x: centerX - (COURT.PLAYER_WIDTH_BOTTOM / 2) * widthRatio,
         y: COURT.PLAYER_BOTTOM_Y
       };
       const plyBottomRight = {
-        x: centerX + COURT.PLAYER_WIDTH_BOTTOM / 2,
+        x: centerX + (COURT.PLAYER_WIDTH_BOTTOM / 2) * widthRatio,
         y: COURT.PLAYER_BOTTOM_Y
       };
 
-      // 외곽 사다리꼴 (선)
+      // Doubles일 경우 외곽 라인 (더 넓은 코트)
+      if (courtType === 'doubles') {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(oppTopLeft.x, oppTopLeft.y);
+        ctx.lineTo(oppTopRight.x, oppTopRight.y);
+        ctx.lineTo(plyBottomRight.x, plyBottomRight.y);
+        ctx.lineTo(plyBottomLeft.x, plyBottomLeft.y);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // Singles 코트 라인 (항상 표시)
+      const singlesRatio = COURT_REAL.WIDTH_SINGLES / COURT_REAL.WIDTH_DOUBLES;
+      const sOppTopLeft = {
+        x: centerX - (COURT.OPPONENT_WIDTH_TOP / 2) * singlesRatio,
+        y: COURT.OPPONENT_TOP_Y
+      };
+      const sOppTopRight = {
+        x: centerX + (COURT.OPPONENT_WIDTH_TOP / 2) * singlesRatio,
+        y: COURT.OPPONENT_TOP_Y
+      };
+      const sOppBottomLeft = {
+        x: centerX - (COURT.OPPONENT_WIDTH_BOTTOM / 2) * singlesRatio,
+        y: COURT.OPPONENT_BOTTOM_Y
+      };
+      const sOppBottomRight = {
+        x: centerX + (COURT.OPPONENT_WIDTH_BOTTOM / 2) * singlesRatio,
+        y: COURT.OPPONENT_BOTTOM_Y
+      };
+      const sPlyTopLeft = {
+        x: centerX - (COURT.PLAYER_WIDTH_TOP / 2) * singlesRatio,
+        y: COURT.PLAYER_TOP_Y
+      };
+      const sPlyTopRight = {
+        x: centerX + (COURT.PLAYER_WIDTH_TOP / 2) * singlesRatio,
+        y: COURT.PLAYER_TOP_Y
+      };
+      const sPlyBottomLeft = {
+        x: centerX - (COURT.PLAYER_WIDTH_BOTTOM / 2) * singlesRatio,
+        y: COURT.PLAYER_BOTTOM_Y
+      };
+      const sPlyBottomRight = {
+        x: centerX + (COURT.PLAYER_WIDTH_BOTTOM / 2) * singlesRatio,
+        y: COURT.PLAYER_BOTTOM_Y
+      };
+
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(oppTopLeft.x, oppTopLeft.y);
-      ctx.lineTo(oppTopRight.x, oppTopRight.y);
-      ctx.lineTo(plyBottomRight.x, plyBottomRight.y);
-      ctx.lineTo(plyBottomLeft.x, plyBottomLeft.y);
+      ctx.moveTo(sOppTopLeft.x, sOppTopLeft.y);
+      ctx.lineTo(sOppTopRight.x, sOppTopRight.y);
+      ctx.lineTo(sPlyBottomRight.x, sPlyBottomRight.y);
+      ctx.lineTo(sPlyBottomLeft.x, sPlyBottomLeft.y);
       ctx.closePath();
       ctx.stroke();
 
+
       // 중앙 네트
-      const netWidth = getCourtWidthAtY(COURT.NET_Y);
+      const netWidth = getCourtWidthAtY(COURT.NET_Y) * widthRatio;
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = COURT.NET_WIDTH;
       ctx.beginPath();
       ctx.moveTo(centerX - netWidth / 2, COURT.NET_Y);
@@ -113,7 +176,7 @@ const TennisProSet = () => {
       ctx.stroke();
 
       // 서비스 라인 (상대)
-      const oppServiceWidth = getCourtWidthAtY(COURT.SERVICE_LINE_Y);
+      const oppServiceWidth = getCourtWidthAtY(COURT.SERVICE_LINE_Y) * singlesRatio;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(centerX - oppServiceWidth / 2, COURT.SERVICE_LINE_Y);
@@ -121,7 +184,7 @@ const TennisProSet = () => {
       ctx.stroke();
 
       // 서비스 라인 (플레이어)
-      const plyServiceWidth = getCourtWidthAtY(COURT.PLAYER_SERVICE_Y);
+      const plyServiceWidth = getCourtWidthAtY(COURT.PLAYER_SERVICE_Y) * singlesRatio;
       ctx.beginPath();
       ctx.moveTo(centerX - plyServiceWidth / 2, COURT.PLAYER_SERVICE_Y);
       ctx.lineTo(centerX + plyServiceWidth / 2, COURT.PLAYER_SERVICE_Y);
@@ -158,10 +221,10 @@ const TennisProSet = () => {
         padding: '16px'
       }}
     >
-      <div style={{ maxWidth: COURT.CANVAS_WIDTH, width: '100%' }}>
+      <div style={{ maxWidth: COURT.CANVAS_WIDTH, width: '100%', marginBottom: '16px' }}>
         <h2 style={{ margin: '0 0 8px' }}>사다리꼴 테니스 코트 (원근)</h2>
         <p style={{ margin: '0 0 12px', color: '#c7e3c9', fontSize: '14px' }}>
-          ITF 규격 기반 원근 코트 · 네트/서비스 라인 표시
+          ITF 규격 기반 원근 코트 · Doubles Court
         </p>
       </div>
 
