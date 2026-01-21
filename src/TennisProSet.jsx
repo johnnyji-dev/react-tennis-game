@@ -175,19 +175,23 @@ const TennisProSet = () => {
       ctx.lineTo(centerX + netWidth / 2, COURT.NET_Y);
       ctx.stroke();
 
-      // 서비스 라인 (상대)
-      const oppServiceWidth = getCourtWidthAtY(COURT.SERVICE_LINE_Y) * singlesRatio;
+      // 서비스 라인 (상대) - 단식 코트 좌우 라인까지
+      const oppServiceT = (COURT.SERVICE_LINE_Y - COURT.OPPONENT_TOP_Y) / (COURT.OPPONENT_BOTTOM_Y - COURT.OPPONENT_TOP_Y);
+      const oppServiceLeftX = lerp(sOppTopLeft.x, sOppBottomLeft.x, Math.min(Math.max(oppServiceT, 0), 1));
+      const oppServiceRightX = lerp(sOppTopRight.x, sOppBottomRight.x, Math.min(Math.max(oppServiceT, 0), 1));
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(centerX - oppServiceWidth / 2, COURT.SERVICE_LINE_Y);
-      ctx.lineTo(centerX + oppServiceWidth / 2, COURT.SERVICE_LINE_Y);
+      ctx.moveTo(oppServiceLeftX + 10, COURT.SERVICE_LINE_Y);
+      ctx.lineTo(oppServiceRightX - 10, COURT.SERVICE_LINE_Y);
       ctx.stroke();
 
-      // 서비스 라인 (플레이어)
-      const plyServiceWidth = getCourtWidthAtY(COURT.PLAYER_SERVICE_Y) * singlesRatio;
+      // 서비스 라인 (플레이어) - 단식 코트 좌우 라인까지
+      const plyServiceT = (COURT.PLAYER_SERVICE_Y - COURT.PLAYER_TOP_Y) / (COURT.PLAYER_BOTTOM_Y - COURT.PLAYER_TOP_Y);
+      const plyServiceLeftX = lerp(sPlyTopLeft.x, sPlyBottomLeft.x, Math.min(Math.max(plyServiceT, 0), 1));
+      const plyServiceRightX = lerp(sPlyTopRight.x, sPlyBottomRight.x, Math.min(Math.max(plyServiceT, 0), 1));
       ctx.beginPath();
-      ctx.moveTo(centerX - plyServiceWidth / 2, COURT.PLAYER_SERVICE_Y);
-      ctx.lineTo(centerX + plyServiceWidth / 2, COURT.PLAYER_SERVICE_Y);
+      ctx.moveTo(plyServiceLeftX - 10, COURT.PLAYER_SERVICE_Y);
+      ctx.lineTo(plyServiceRightX + 10, COURT.PLAYER_SERVICE_Y);
       ctx.stroke();
 
       // 상자 내부 세로 중앙 가이드 (네트에서 서비스 라인까지)
