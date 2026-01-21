@@ -190,11 +190,17 @@ const TennisProSet = () => {
       ctx.lineTo(centerX + plyServiceWidth / 2, COURT.PLAYER_SERVICE_Y);
       ctx.stroke();
 
-      // 상자 내부 세로 중앙 가이드
-      ctx.setLineDash([6, 10]);
+      // 상자 내부 세로 중앙 가이드 (네트에서 서비스 라인까지)
+      ctx.setLineDash([6, 0]);
+      // 상대편: 네트 → 상대 서비스 라인
       ctx.beginPath();
-      ctx.moveTo(centerX, COURT.OPPONENT_TOP_Y);
-      ctx.lineTo(centerX, COURT.PLAYER_BOTTOM_Y);
+      ctx.moveTo(centerX, COURT.NET_Y);
+      ctx.lineTo(centerX, COURT.SERVICE_LINE_Y);
+      ctx.stroke();
+      // 플레이어편: 네트 → 플레이어 서비스 라인
+      ctx.beginPath();
+      ctx.moveTo(centerX, COURT.NET_Y);
+      ctx.lineTo(centerX, COURT.PLAYER_SERVICE_Y);
       ctx.stroke();
       ctx.setLineDash([]);
     };
